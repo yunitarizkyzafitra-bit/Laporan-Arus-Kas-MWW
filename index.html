@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Akuntansi Akuntabel - DPW Muslimah Wahdah Sulteng</title>
+    <style>
+        :root {
+            --primary-color: #008b8b; /* Tosca Utama */
+            --primary-light: #20b2aa;
+            --primary-dark: #004d4d; /* Sidebar */
+            --bg-color: #f0f7f7;
+            --card-bg: #ffffff;
+            --text-color: #2b2b2b;
+            --success-color: #2e7d32;
+            --danger-color: #c62828;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Layar Login Utama */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--primary-dark), var(--primary-light)); display: flex; justify-content: center; align-items: center; z-index: 1000; transition: all 0.4s ease; }
+        .login-box { background: var(--card-bg); padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 100%; max-width: 400px; text-align: center; }
+        .logo-sphere { width: 70px; height: 70px; background-color: var(--bg-color); border-radius: 50%; margin: 0 auto 15px; display: flex; justify-content: center; align-items: center; color: var(--primary-dark); font-weight: bold; font-size: 24px; border: 2px solid var(--primary-light); }
+        .login-box h2 { color: var(--primary-dark); margin-bottom: 20px; font-size: 22px; }
+        .form-group { margin-bottom: 18px; text-align: left; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--primary-dark); margin-bottom: 6px; }
+        .form-group input { width: 100%; padding: 12px; border: 2px solid #d1e5e5; border-radius: 6px; font-size: 14px; outline: none; }
+        .form-group input:focus { border-color: var(--primary-color); }
+        .login-btn { width: 100%; padding: 12px; background-color: var(--primary-color); color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
+        .err-text { color: var(--danger-color); font-size: 13px; margin-top: 10px; display: none; }
+
+        /* Struktur Layout Dashboard */
+        .sidebar { width: 270px; background-color: var(--primary-dark); color: white; display: flex; flex-direction: column; justify-content: space-between; padding: 25px 20px; }
+        .sidebar-brand h1 { font-size: 15px; text-align: center; letter-spacing: 0.5px; }
+        .sidebar-brand p { font-size: 11px; opacity: 0.8; text-align: center; margin-top: 4px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .nav-menu { list-style: none; margin-top: 25px; }
+        .nav-item { padding: 12px 15px; border-radius: 6px; font-size: 14px; background-color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .status-box { background: rgba(255,255,255,0.06); padding: 15px; border-radius: 8px; font-size: 12px; }
+        .status-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+
+        .main-workspace { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-navbar { background-color: var(--primary-dark); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .content-body { padding: 30px; }
+
+        /* Komponen Visual */
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .data-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); margin-bottom: 25px; }
+        .card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
+        .badge-indicator { background-color: #e0f2f1; color: var(--primary-dark); padding: 5px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        
+        /* Tabel Pembukuan */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background-color: var(--primary-color); color: white; padding: 12px 10px; font-weight: 600; text-align: left; }
+        td { padding: 12px 10px; border-bottom: 1px solid #e8f2f2; }
+        tr:nth-child(even) { background-color: #fcfdfe; }
+        .text-right { text-align: right; }
+        .debit-style { color: var(--danger-color); font-weight: 500; }
+        .kredit-style { color: var(--success-color); font-weight: 500; }
+
+        /* Form Entri */
+        .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .input-field { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; margin-top: 5px; outline: none; }
+        .input-field:focus { border-color: var(--primary-color); }
+        .submit-btn { width: 100%; padding: 12px; background-color: var(--primary-dark); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <!-- Proteksi Keamanan Halaman Utama -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <div class="logo-sphere">MW</div>
+            <h2>Sistem Keuangan DPW MWI</h2>
+            <p style="font-size: 13px; color:#666; margin-bottom:20px;">Otentikasi Akun Pengurus Tengah</p>
+            <form onsubmit="prosesOtentikasi(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="user-input" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="pass-input" required>
+                </div>
+                <button type="submit" class="login-btn">Buka Buku Jurnal</button>
+                <div id="err-log" class="err-text">Akun salah. Hak akses ditolak.</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Layout Utama Aplikasi -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo-sphere" style="background-color:#ffffff;">MW</div>
+            <h1>DPW MUSLIMAH WAHDAH</h1>
+            <p>Islamiyah Sulawesi Tengah</p>
+            <ul class="nav-menu">
+                <li class="nav-item">📊 Jurnal Kas Terintegrasi</li>
+            </ul>
+        </div>
+        <div class="status-box">
+            <div class="status-row"><span>Koneksi:</span> <strong id="net-badge" style="color:#81d4fa;">Mendeteksi...</strong></div>
+            <div class="status-row"><span>Antrean Offline:</span> <strong id="queue-badge">0 Transaksi</strong></div>
+        </div>
+    </div>
+
+    <div class="main-workspace">
+        <div class="top-navbar">
+            <div>
+                <h2>SISTEM INFORMASI KEUANGAN AKUNTABEL</h2>
+                <p style="font-size:12px; opacity:0.8;">Sinkronisasi Otomatis Google Sheets & Penyimpanan Luring Mandiri.</p>
+            </div>
+            <div style="text-align:right; font-size:13px;">
+                <span>User: <strong>muslimah</strong></span><br>
+                <span style="color:#80cbc4;">● Hak Akses Terverifikasi</span>
+            </div>
+        </div>
+
+        <div class="content-body">
+            <div class="dashboard-grid">
+                
+                <!-- Tabel Tampilan Buku Besar Kas -->
+                <div class="data-card">
+                    <div class="card-header-flex">
+                        <h3>Catatan Rekap Transaksi Jurnal</h3>
+                        <span id="sync-status" class="badge-indicator">Sinkronisasi Jaringan...</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Kode Audit</th>
+                                    <th>Tanggal / Waktu</th>
+                                    <th>Jenis Arus Kas</th>
+                                    <th class="text-right">Debit (Keluar)</th>
+                                    <th class="text-right">Kredit (Masuk)</th>
+                                    <th>Uraian Kategori</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accounting-rows">
+                                <!-- Data Dimuat Otomatis Melalui Ekosistem API -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Form Entri Data Pendukung Offline Modus -->
+                <div class="data-card" style="height: fit-content;">
+                    <div class="card-header-flex">
+                        <h3>Input Jurnal Baru</h3>
+                    </div>
+                    <form onsubmit="simpanTransaksiBaru(event)">
+                        <div class="form-group">
+                            <label>Jenis Arus Kas / Nama Transaksi</label>
+                            <input type="text" id="tx-jenis" class="input-field" placeholder="Contoh: Pemindahbukan logistik mw" required>
+                        </div>
+                        <div class="grid-form">
+                            <div class="form-group">
+                                <label>Debit (Keluar - Rp)</label>
+                                <input type="number" id="tx-debit" class="input-field" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Kredit (Masuk - Rp)</label>
+                                <input type="number" id="tx-kredit" class="input-field" value="0">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label>Uraian Kategori Pembukuan</label>
+                            <input type="text" id="tx-uraian" class="input-field" placeholder="Contoh: Logistik / Umum / Qurban" required>
+                        </div>
+                        <button type="submit" class="submit-btn">Simpan ke Buku Besar</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TEMPELKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCtuTwcea0DTmoxJTlSUcqXew0WVzk3CCrzEwyqcHXGtpuEC-zUT4iYN4IR9JxOEI/exec";
+
+        function prosesOtentikasi(e) {
+            e.preventDefault();
+            if(document.getElementById('user-input').value === 'muslimah' && document.getElementById('pass-input').value === 'bismillah') {
+                document.getElementById('login-overlay').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('login-overlay').style.display = 'none';
+                    inisialisasiSistem();
+                }, 400);
+            } else {
+                document.getElementById('err-log').style.display = 'block';
+            }
+        }
+
+        function inisialisasiSistem() {
+            updateStatusKoneksi();
+            muatBukuKas();
+            window.addEventListener('online', prosesAntreanOffline);
+            window.addEventListener('offline', updateStatusKoneksi);
+        }
+
+        function updateStatusKoneksi() {
+            const online = navigator.onLine;
+            document.getElementById('net-badge').innerText = online ? "Online" : "Offline";
+            document.getElementById('net-badge').style.color = online ? "#81d4fa" : "#ff8a80";
+            
+            const antrean = JSON.parse(localStorage.getItem('mwi_offline_queue') || '[]');
+            document.getElementById('queue-badge').innerText = antrean.length + " Transaksi";
+        }
+
+        async function muatBukuKas() {
+            if(navigator.onLine && APPS_SCRIPT_URL !== "GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA") {
+                try {
+                    const respon = await fetch(APPS_SCRIPT_URL);
+                    const data = await respon.json();
+                    localStorage.setItem('cached_mwi_books', JSON.stringify(data));
+                    renderKeTabel(data);
+                    document.getElementById('sync-status').innerText = "✓ Sinkron Bersama Spreadsheet";
+                } catch(e) {
+                    muatDariLokal();
+                }
+            } else {
+                muatDariLokal();
+            }
+        }
+
+        function muatDariLokal() {
+            const dataLokal = localStorage.getItem('cached_mwi_books');
+            if(dataLokal) {
+                renderKeTabel(JSON.parse(dataLokal));
+                document.getElementById('sync-status').innerText = "📴 Mode Offline (Arsip Lokal)";
+            } else {
+                document.getElementById('sync-status').innerText = "Gagal memuat data.";
+            }
+        }
+
+        function renderKeTabel(data) {
+            const tbody = document.getElementById('accounting-rows');
+            tbody.innerHTML = "";
+            data.forEach(row => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${row.id}</strong></td>
+                        <td>${row.tanggal}</td>
+                        <td>${row.jenis}</td>
+                        <td class="text-right debit-style">Rp ${row.debit.toLocaleString('id-ID')}</td>
+                        <td class="text-right kredit-style">Rp ${row.kredit.toLocaleString('id-ID')}</td>
+                        <td><span class="badge-indicator">${row.uraian}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function simpanTransaksiBaru(e) {
+            e.preventDefault();
+            
+            const payload = {
+                tanggal: new Date().toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }).replace(/\./g, ':'),
+                jenis: document.getElementById('tx-jenis').value,
+                debit: parseFloat(document.getElementById('tx-debit').value) || 0,
+                kredit: parseFloat(document.getElementById('tx-kredit').value) || 0,
+                uraian: document.getElementById('tx-uraian').value
+            };
+
+            if(navigator.onLine && APPS_SCRIPT_URL !== "GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA") {
+                document.getElementById('sync-status').innerText = "Mengirim Jurnal...";
+                try {
+                    await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                    muatBukuKas();
+                } catch(err) {
+                    tahanOffline(payload);
+                }
+            } else {
+                tahanOffline(payload);
+            }
+            e.target.reset();
+        }
+
+        function tahanOffline(payload) {
+            const antrean = JSON.parse(localStorage.getItem('mwi_offline_queue') || '[]');
+            antrean.push(payload);
+            localStorage.setItem('mwi_offline_queue', JSON.stringify(antrean));
+            updateStatusKoneksi();
+            alert("Koneksi terputus. Data disimpan aman di memori lokal gawai Anda, dan akan terkirim otomatis saat internet stabil kembali.");
+        }
+
+        async function prosesAntreanOffline() {
+            updateStatusKoneksi();
+            const antrean = JSON.parse(localStorage.getItem('mwi_offline_queue') || '[]');
+            if(antrean.length === 0) return;
+
+            document.getElementById('sync-status').innerText = "Mengunggah Antrean Luring...";
+            for(let i = 0; i < antrean.length; i++) {
+                try {
+                    await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(antrean[i]) });
+                } catch(e) {
+                    break; 
+                }
+            }
+            localStorage.setItem('mwi_offline_queue', '[]');
+            updateStatusKoneksi();
+            muatBukuKas();
+        }
+    </script>
+</body>
+</html>
