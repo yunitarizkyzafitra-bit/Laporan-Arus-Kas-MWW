@@ -1,91 +1,42 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Sistem Kas MWW Sulteng</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #20b2aa; } /* Biru Tosca */
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
-    <div class="flex h-screen">
-        <!-- Sidebar -->
-        <div class="w-64 bg-navy-900 text-white p-5">
-            <img src="https://wahdah.or.id/wp-content/uploads/2023/06/Logo-MWW.png" class="w-20 mx-auto mb-4" alt="Logo MWW">
-            <h1 class="text-sm font-bold text-center">DPW MUSLIMAH WAHDAH WILAYAH SULAWESI TENGAH</h1>
-            <p class="text-[10px] text-center mt-1 opacity-70">Laporan Kas MWW</p>
-            <nav class="mt-10 space-y-2">
-                <button onclick="showSection('dashboard')" class="w-full text-left p-2 hover:bg-blue-700 rounded">📊 Dashboard</button>
-                <button onclick="showSection('analisis')" class="w-full text-left p-2 hover:bg-blue-700 rounded">📈 Analisis Dana</button>
-            </nav>
-        </div>
+<body class="flex items-center justify-center h-screen">
 
-        <!-- Content -->
-        <div class="flex-1 p-8 overflow-y-auto">
-            <div id="dashboard">
-                <h2 class="text-2xl font-bold mb-6">Ringkasan Arus Kas</h2>
-                <div class="grid grid-cols-3 gap-4 mb-8">
-                    <div class="bg-green-500 text-white p-4 rounded shadow">Masuk: <span id="total-masuk">Rp 0</span></div>
-                    <div class="bg-red-500 text-white p-4 rounded shadow">Keluar: <span id="total-keluar">Rp 0</span></div>
-                    <div class="bg-blue-500 text-white p-4 rounded shadow">Saldo: <span id="saldo-akhir">Rp 0</span></div>
-                </div>
-                
-                <div class="bg-white p-6 rounded shadow">
-                    <h3 class="font-bold mb-4">Daftar Transaksi</h3>
-                    <table class="w-full text-left">
-                        <thead><tr class="border-b"><th>Tanggal</th><th>Uraian</th><th>Masuk</th><th>Keluar</th></tr></thead>
-                        <tbody id="table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="analisis" class="hidden">
-                <h2 class="text-2xl font-bold mb-6">Analisis Arus Kas</h2>
-                <div class="bg-white p-6 rounded shadow mb-6">
-                    <h3 class="font-bold mb-4">Presentase Masuk vs Keluar</h3>
-                    <div id="chart-presentase"></div>
-                </div>
-                <div class="bg-white p-6 rounded shadow">
-                    <h3 class="font-bold mb-4">Pengguna Dana Terbanyak</h3>
-                    <div id="list-terbanyak"></div>
-                </div>
-            </div>
+    <div class="bg-white p-8 rounded-lg shadow-xl w-96">
+        <img src="https://wahdah.or.id/wp-content/uploads/2023/06/Logo-MWW.png" class="w-20 mx-auto mb-4">
+        <h1 class="text-center font-bold text-teal-600 mb-6">DPW MUSLIMAH WAHDAH WILAYAH SULAWESI TENGAH</h1>
+        
+        <input type="text" id="user" placeholder="Username" class="w-full p-2 mb-4 border rounded">
+        
+        <div class="relative mb-6">
+            <input type="password" id="pass" placeholder="Password" class="w-full p-2 border rounded">
+            <button type="button" onclick="togglePass()" class="absolute right-3 top-2 text-gray-500">👁️</button>
         </div>
+        
+        <button onclick="login()" class="w-full bg-teal-500 text-white py-2 rounded hover:bg-teal-600">Masuk</button>
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsXdee1_I5jSwS6_Gc2fn-nirvQ59WB3xvDtAWOjM0wX6-msbAms1TWBvT59UCuO8S/exec";
-
-        async function fetchData() {
-            const res = await fetch(APPS_SCRIPT_URL);
-            const data = await res.json();
-            renderDashboard(data);
-            renderAnalisis(data);
+        function togglePass() {
+            const p = document.getElementById('pass');
+            p.type = p.type === 'password' ? 'text' : 'password';
         }
 
-        function renderDashboard(data) {
-            let masuk = 0, keluar = 0;
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = "";
-            data.forEach(item => {
-                masuk += Number(item.kredit);
-                keluar += Number(item.debit);
-                tbody.innerHTML += `<tr><td>${item.tanggal}</td><td>${item.uraian}</td><td>${item.kredit}</td><td>${item.debit}</td></tr>`;
-            });
-            document.getElementById('total-masuk').innerText = "Rp " + masuk.toLocaleString();
-            document.getElementById('total-keluar').innerText = "Rp " + keluar.toLocaleString();
-            document.getElementById('saldo-akhir').innerText = "Rp " + (masuk - keluar).toLocaleString();
+        function login() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            // Gunakan google.script.run untuk memanggil fungsi di Apps Script
+            google.script.run.withSuccessHandler(res => {
+                if(res) alert("Berhasil Login!");
+                else alert("Username/Password Salah");
+            }).verifyLogin(u, p);
         }
-
-        function renderAnalisis(data) {
-            // Logika Presentase
-            // Logika Mengurutkan Dana Terbanyak (berdasarkan Uraian)
-        }
-
-        function showSection(id) {
-            document.getElementById('dashboard').classList.toggle('hidden', id !== 'dashboard');
-            document.getElementById('analisis').classList.toggle('hidden', id !== 'analisis');
-        }
-
-        fetchData();
     </script>
 </body>
 </html>
