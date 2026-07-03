@@ -1,42 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #20b2aa; } /* Biru Tosca */
-    </style>
-</head>
-<body class="flex items-center justify-center h-screen">
-
-    <div class="bg-white p-8 rounded-lg shadow-xl w-96">
-        <img src="https://wahdah.or.id/wp-content/uploads/2023/06/Logo-MWW.png" class="w-20 mx-auto mb-4">
-        <h1 class="text-center font-bold text-teal-600 mb-6">DPW MUSLIMAH WAHDAH WILAYAH SULAWESI TENGAH</h1>
-        
-        <input type="text" id="user" placeholder="Username" class="w-full p-2 mb-4 border rounded">
-        
-        <div class="relative mb-6">
-            <input type="password" id="pass" placeholder="Password" class="w-full p-2 border rounded">
-            <button type="button" onclick="togglePass()" class="absolute right-3 top-2 text-gray-500">👁️</button>
-        </div>
-        
-        <button onclick="login()" class="w-full bg-teal-500 text-white py-2 rounded hover:bg-teal-600">Masuk</button>
+<div class="bg-white p-8 rounded-lg shadow-xl w-96 border-t-4 border-teal-600">
+    <img src="https://wahdah.or.id/wp-content/uploads/2023/06/Logo-MWW.png" class="w-20 mx-auto mb-4">
+    <h1 class="text-center font-bold text-teal-800 mb-6">LOGIN SISTEM KAS</h1>
+    
+    <!-- Username -->
+    <div class="mb-4">
+        <label class="block text-sm text-teal-700 mb-1">Username</label>
+        <input type="text" id="user" value="muslimah" class="w-full p-2 border rounded border-teal-200 focus:ring-2 focus:ring-teal-500 outline-none">
     </div>
+    
+    <!-- Password dengan Toggle -->
+    <div class="mb-6">
+        <label class="block text-sm text-teal-700 mb-1">Password</label>
+        <div class="relative">
+            <input type="password" id="pass" value="bismillah" class="w-full p-2 border rounded border-teal-200 focus:ring-2 focus:ring-teal-500 outline-none">
+            <button type="button" onclick="togglePass()" class="absolute right-3 top-2 text-teal-600 font-bold text-xs">👁️</button>
+        </div>
+    </div>
+    
+    <button onclick="login()" class="w-full bg-teal-700 text-white py-2 rounded hover:bg-teal-800 transition">Masuk ke Dashboard</button>
+</div>
 
-    <script>
-        function togglePass() {
-            const p = document.getElementById('pass');
-            p.type = p.type === 'password' ? 'text' : 'password';
-        }
+<script>
+    function togglePass() {
+        const p = document.getElementById('pass');
+        p.type = p.type === 'password' ? 'text' : 'password';
+    }
 
-        function login() {
-            const u = document.getElementById('user').value;
-            const p = document.getElementById('pass').value;
-            // Gunakan google.script.run untuk memanggil fungsi di Apps Script
-            google.script.run.withSuccessHandler(res => {
-                if(res) alert("Berhasil Login!");
-                else alert("Username/Password Salah");
-            }).verifyLogin(u, p);
+    function login() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        
+        // Verifikasi statis sesuai permintaan
+        if(u === 'muslimah' && p === 'bismillah') {
+            alert("Selamat Datang, Muslimah!");
+            // Tambahkan logika untuk redirect ke dashboard di sini
+        } else {
+            alert("Username atau Password salah.");
         }
-    </script>
-</body>
-</html>
+    }
+</script>
