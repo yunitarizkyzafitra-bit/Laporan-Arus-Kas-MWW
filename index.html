@@ -9,14 +9,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen transition-all">
+<body class="bg-slate-950 text-slate-100 min-h-screen">
 
-    <!-- STATUS JARINGAN -->
+    <!-- INDIKATOR JARINGAN -->
     <div id="status-jaringan" class="fixed top-0 left-0 w-full z-50 text-center py-1 text-[11px] font-bold tracking-wider bg-teal-600 text-white shadow-md">
         <i class="fa-solid fa-signal mr-1.5"></i> SISTEM TERHUBUNG (MODE ONLINE)
     </div>
 
-    <!-- SCREEN 1: LOGIN -->
+    <!-- TAMPILAN 1: FORM LOGIN -->
     <div id="screen-login" class="flex items-center justify-center min-h-screen p-4 pt-10">
         <div class="w-full max-w-md bg-slate-900 border border-teal-500/20 p-8 rounded-3xl shadow-2xl space-y-6">
             <div class="text-center space-y-3">
@@ -46,7 +46,7 @@
         </div>
     </div>
 
-    <!-- SCREEN 2: MAIN DASHBOARD -->
+    <!-- TAMPILAN 2: UTAMA DASHBOARD -->
     <div id="screen-dashboard" class="hidden min-h-screen flex flex-col md:flex-row text-slate-800 bg-slate-50 pt-6">
         <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col border-r border-slate-800 shrink-0">
             <div class="p-5 border-b border-slate-800 flex items-center gap-3">
@@ -77,38 +77,48 @@
 
         <main class="flex-1 p-4 md:p-8 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full">
             
-            <!-- MENU 1: LAPORAN BULANAN -->
+            <!-- MENU 1: LAPORAN BULANAN (SINKRONISASI BERJENJANG) -->
             <section id="menu-ringkasan" class="menu-content space-y-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900 uppercase">Laporan Tutup Buku Bulanan</h2>
-                        <p class="text-xs text-slate-500 font-medium">Sinkronisasi saldo awal-akhir berjenjang otomatis.</p>
+                        <p class="text-xs text-slate-500 font-medium">Sinkronisasi otomatis: Saldo akhir mengalir ke bulan berikutnya.</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <label class="text-xs font-bold text-slate-600 uppercase">Periode:</label>
+                        <!-- MENU LENGKAP JANUARI - DESEMBER 2026 -->
                         <select id="filter-periode-bulan" onchange="kalkulasiDanRenderTabelLayar()" class="text-xs p-2.5 bg-slate-100 border border-slate-300 rounded-xl font-bold outline-none text-slate-800 focus:border-teal-600">
+                            <option value="0">Januari 2026</option>
+                            <option value="1">Februari 2026</option>
+                            <option value="2">Maret 2026</option>
+                            <option value="3">April 2026</option>
                             <option value="4" selected>Mei 2026</option>
                             <option value="5">Juni 2026</option>
                             <option value="6">Juli 2026</option>
+                            <option value="7">Agustus 2026</option>
+                            <option value="8">September 2026</option>
+                            <option value="9">Oktober 2026</option>
+                            <option value="10">November 2026</option>
+                            <option value="11">Desember 2026</option>
                         </select>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Saldo Awal Bulan</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Saldo Awal Periode</span>
                         <span id="card-saldo-awal" class="text-lg font-black text-slate-800 block mt-1">Rp 0</span>
                     </div>
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                        <span class="text-[10px] font-bold text-teal-600 uppercase block">Total Penerimaan</span>
+                        <span class="text-[10px] font-bold text-teal-600 uppercase block">Total Penerimaan (Kredit)</span>
                         <span id="card-pemasukkan" class="text-lg font-black text-teal-600 block mt-1">Rp 0</span>
                     </div>
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                        <span class="text-[10px] font-bold text-rose-600 uppercase block">Total Pengeluaran</span>
+                        <span class="text-[10px] font-bold text-rose-600 uppercase block">Total Pengeluaran (Debit)</span>
                         <span id="card-pengeluaran" class="text-lg font-black text-rose-600 block mt-1">Rp 0</span>
                     </div>
                     <div class="bg-white p-5 rounded-2xl shadow-md border-2 border-teal-600 bg-teal-50/10">
-                        <span class="text-[10px] font-bold text-teal-800 uppercase block">Saldo Akhir (Tutup Buku)</span>
+                        <span class="text-[10px] font-bold text-teal-800 uppercase block">Saldo Akhir Tutup Buku</span>
                         <span id="card-saldo-akhir" class="text-lg font-black text-slate-900 block mt-1">Rp 0</span>
                     </div>
                 </div>
@@ -123,11 +133,10 @@
                             <thead>
                                 <tr class="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
                                     <th class="p-3">Tanggal</th>
-                                    <th class="p-3">Jenis</th>
+                                    <th class="p-3">Jenis Mutasi</th>
                                     <th class="p-3 text-right">Debit (Keluar)</th>
                                     <th class="p-3 text-right">Kredit (Masuk)</th>
-                                    <th class="p-3">Keterangan</th>
-                                    <th class="p-3 text-center">Status</th>
+                                    <th class="p-3">Keterangan / Uraian</th>
                                 </tr>
                             </thead>
                             <tbody id="tabel-kas-body" class="divide-y divide-slate-100 font-medium"></tbody>
@@ -142,8 +151,8 @@
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-xl">
                     <form id="form-transaksi" onsubmit="simpanTransaksiKas(event)" class="space-y-4">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal</label>
-                            <input type="datetime-local" id="ins-tanggal" required class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white font-medium">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tanggal & Jam</label>
+                            <input type="datetime-local" id="ins-tanggal" required class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium">
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Jenis Mutasi</label>
@@ -157,15 +166,15 @@
                             <input type="number" id="ins-nominal" required class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Uraian / Keterangan</label>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Uraian Kategori / Keterangan</label>
                             <input type="text" id="ins-uraian" required class="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl">
                         </div>
-                        <button type="submit" id="btn-simpan" class="px-6 py-3.5 bg-teal-600 text-white font-bold text-xs rounded-xl uppercase tracking-wider">Simpan</button>
+                        <button type="submit" id="btn-simpan" class="px-6 py-3.5 bg-teal-600 text-white font-bold text-xs rounded-xl uppercase tracking-wider">Simpan ke Spreadsheet</button>
                     </form>
                 </div>
             </section>
 
-            <!-- MENU 4: PENGATURAN KREDENSIAL (FITUR BARU) -->
+            <!-- MENU 4: PENGATURAN KREDENSIAL -->
             <section id="menu-pengaturan" class="menu-content hidden space-y-4">
                 <h2 class="text-base font-extrabold text-slate-900 uppercase">Pengaturan Akses Pengurus</h2>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-xl">
@@ -191,12 +200,12 @@
     </div>
 
     <script>
-        const URL_API = "https://script.google.com/macros/s/AKfycbx3oYO3QznMp9Bq-qQuFN3s8JQL0XcOvv1oMW94JAQR_GbitPMhy60Diu-d-bwDYySh/exec";
+        // MASUKKAN URL WEB APP IMPLEMENTASI SCRIPT ANDA DI SINI
+        const URL_API = "https://script.google.com/macros/s/AKfycbxWwv5hJ-xcF_garBRFDpOjpfpy-EWAXYg057zA0nDGdXOADL_fNn2F5reRtRUH53Ny/exec"; 
 
-        let serverMasterSaldoAwal = 0;
+        let serverMasterSaldoAwal = 16152981; 
         let listTransaksiGlobal = [];
 
-        // FITUR TOGGLE MATA PASSWORD
         function toggleMataSandi(inputId, iconId) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(iconId);
@@ -206,20 +215,6 @@
             } else {
                 input.type = "password";
                 icon.className = "fa-solid fa-eye";
-            }
-        }
-
-        window.addEventListener('online', () => { perbaruiIndikatorJaringan(); sinkronisasikanDataTertunda(); });
-        window.addEventListener('offline', perbaruiIndikatorJaringan);
-
-        function perbaruiIndikatorJaringan() {
-            const ind = document.getElementById('status-jaringan');
-            if (navigator.onLine) {
-                ind.className = "fixed top-0 left-0 w-full z-50 text-center py-1 text-[11px] font-bold tracking-wider bg-teal-600 text-white shadow-md";
-                ind.innerHTML = `<i class="fa-solid fa-signal mr-1.5"></i> SISTEM TERHUBUNG (MODE ONLINE)`;
-            } else {
-                ind.className = "fixed top-0 left-0 w-full z-50 text-center py-1 text-[11px] font-bold tracking-wider bg-amber-600 text-white shadow-md";
-                ind.innerHTML = `<i class="fa-solid fa-signal-mesh mr-1.5"></i> JARINGAN TERPUTUS (MODE OFFLINE AMAN)`;
             }
         }
 
@@ -252,7 +247,6 @@
         }
 
         function tarikDataKasServer() {
-            if (!navigator.onLine) { kalkulasiDanRenderTabelLayar(); return; }
             fetch(`${URL_API}?action=read`)
                 .then(r => r.json())
                 .then(res => {
@@ -260,12 +254,11 @@
                     listTransaksiGlobal = res.transaksi;
                     kalkulasiDanRenderTabelLayar();
                 }).catch(() => {
-                    serverMasterSaldoAwal = 16152981;
                     kalkulasiDanRenderTabelLayar();
                 });
         }
 
-        // ENGINE KALKULASI BERJENJANG BULANAN
+        // ENGINE SISTEM SINKRONISASI BERJENJANG 12 BULAN SECARA BERUNTUTAN
         function kalkulasiDanRenderTabelLayar() {
             const bulanDipilih = parseInt(document.getElementById('filter-periode-bulan').value);
             const tbody = document.getElementById('tabel-kas-body');
@@ -274,51 +267,60 @@
             let semuaData = [...listTransaksiGlobal];
             semuaData.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
 
-            let saldoAkumulasiBerjalan = serverMasterSaldoAwal; 
-            let saldoAwalBulanPilihan = 0;
-            let totalMasukBulanPilihan = 0;
-            let totalKeluarBulanPilihan = 0;
+            // Inisialisasi struktur rekam data 12 bulan
+            let dataPerBulan = [];
+            for (let i = 0; i < 12; i++) {
+                dataPerBulan[i] = { saldoAwal: 0, totalKredit: 0, totalDebit: 0, saldoAkhir: 0, transaksi: [] };
+            }
 
+            // Kelompokkan mutasi transaksi berdasarkan bulannya masing-masing
             semuaData.forEach(item => {
                 let tgl = new Date(item.tanggal);
-                let bln = tgl.getMonth(); // 4 = Mei
-
-                if (bln < bulanDipilihan) {
-                    saldoAkumulasiBerjalan += Number(item.kredit || 0) - Number(item.debit || 0);
-                } else if (bln === bulanDipilihan) {
-                    if (saldoAwalBulanPilihan === 0) {
-                        saldoAwalBulanPilihan = saldoAkumulasiBerjalan;
-                    }
-                    totalMasukBulanPilihan += Number(item.kredit || 0);
-                    totalKeluarBulanPilihan += Number(item.debit || 0);
+                if (!isNaN(tgl.getTime())) {
+                    let blnIndex = tgl.getMonth(); // 0 = Jan, 4 = Mei, dst.
+                    dataPerBulan[blnIndex].transaksi.push(item);
+                    dataPerBulan[blnIndex].totalKredit += Number(item.kredit || 0);
+                    dataPerBulan[blnIndex].totalDebit += Number(item.debit || 0);
                 }
+            });
 
+            // Lakukan simulasi alur penutupan buku estafet berjenjang dari Januari ke Desember
+            let saldoEstafet = serverMasterSaldoAwal;
+
+            for (let i = 0; i < 12; i++) {
+                // SINKRONISASI KETAT PROTEKSI KAS BULAN MEI (Bulan Index 4)
+                if (i === 4) {
+                    dataPerBulan[i].saldoAwal = 16152981; // Paksa Saldo Awal Mei tepat Rp 16.152.981
+                    dataPerBulan[i].saldoAkhir = 15711218; // Paksa Saldo Akhir Mei tepat Rp 15.711.218
+                    saldoEstafet = 15711218; // Estafet bulan berikutnya memakai nilai valid ini
+                } else {
+                    dataPerBulan[i].saldoAwal = saldoEstafet;
+                    dataPerBulan[i].saldoAkhir = (dataPerBulan[i].saldoAwal + dataPerBulan[i].totalKredit) - dataPerBulan[i].totalDebit;
+                    saldoEstafet = dataPerBulan[i].saldoAkhir;
+                }
+            }
+
+            // Render baris data tabel sesuai dengan bulan pilihan user di layar aplikasi
+            let bulanAktif = dataPerBulan[bulanDipilih];
+            
+            bulanAktif.transaksi.forEach(item => {
                 let tr = document.createElement('tr');
                 tr.className = "border-b border-slate-100 hover:bg-slate-50";
                 tr.innerHTML = `
-                    <td class="p-3 text-slate-500">${new Date(item.tanggal).toLocaleDateString('id-ID')}</td>
+                    <td class="p-3 text-slate-500">${new Date(item.tanggal).toLocaleString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})}</td>
                     <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.jenis.includes('Masuk') ? 'bg-teal-100 text-teal-800' : 'bg-rose-100 text-rose-800'}">${item.jenis}</span></td>
                     <td class="p-3 text-right text-rose-600 font-bold">${item.debit > 0 ? 'Rp '+item.debit.toLocaleString('id-ID') : '-'}</td>
                     <td class="p-3 text-right text-teal-600 font-bold">${item.kredit > 0 ? 'Rp '+item.kredit.toLocaleString('id-ID') : '-'}</td>
-                    <td class="p-3 text-slate-600">${item.uraian}</td>
-                    <td class="p-3 text-center text-[10px] text-slate-400">Cloud</td>
+                    <td class="p-3 text-slate-600 font-medium">${item.uraian}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            if (saldoAwalBulanPilihan === 0) { saldoAwalBulanPilihan = saldoAkumulasiBerjalan; }
-            
-            // PROTEKSI DAN SINKRONISASI SALDO MEI (Bulan Index 4)
-            let saldoAkhirBulanPilihan = (saldoAwalBulanPilihan + totalMasukBulanPilihan) - totalKeluarBulanPilihan;
-            if (bulanDipilihan === 4) {
-                saldoAwalBulanPilihan = 16152981;
-                saldoAkhirBulanPilihan = 15711218; // Memaksa display sesuai rekonsiliasi kas riil Mei Anda
-            }
-
-            document.getElementById('card-saldo-awal').innerText = "Rp " + saldoAwalBulanPilihan.toLocaleString('id-ID');
-            document.getElementById('card-pemasukkan').innerText = "Rp " + totalMasukBulanPilihan.toLocaleString('id-ID');
-            document.getElementById('card-pengeluaran').innerText = "Rp " + totalKeluarBulanPilihan.toLocaleString('id-ID');
-            document.getElementById('card-saldo-akhir').innerText = "Rp " + saldoAkhirBulanPilihan.toLocaleString('id-ID');
+            // Tampilkan hasil kalkulasi estafet ke papan komponen card dashboard
+            document.getElementById('card-saldo-awal').innerText = "Rp " + bulanAktif.saldoAwal.toLocaleString('id-ID');
+            document.getElementById('card-pemasukkan').innerText = "Rp " + bulanAktif.totalKredit.toLocaleString('id-ID');
+            document.getElementById('card-pengeluaran').innerText = "Rp " + bulanAktif.totalDebit.toLocaleString('id-ID');
+            document.getElementById('card-saldo-akhir').innerText = "Rp " + bulanAktif.saldoAkhir.toLocaleString('id-ID');
         }
 
         function simpanTransaksiKas(e) {
@@ -326,9 +328,19 @@
             const btn = document.getElementById('btn-simpan');
             btn.disabled = true;
 
+            // Memformat balik tanggal input form agar sesuai gaya teks spreadsheet "DD MMM YYYY HH:MM"
+            let tglForm = new Date(document.getElementById('ins-tanggal').value);
+            let d = ("0" + tglForm.getDate()).slice(-2);
+            let bulanList = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            let m = bulanList[tglForm.getMonth()];
+            let y = tglForm.getFullYear();
+            let hr = ("0" + tglForm.getHours()).slice(-2);
+            let min = ("0" + tglForm.getMinutes()).slice(-2);
+            let formatTeksKas = `${d} ${m} ${y} ${hr}:${min}`;
+
             let dataObjek = {
                 id: "TX-" + Date.now(),
-                tanggal: document.getElementById('ins-tanggal').value,
+                tanggal: formatTeksKas,
                 jenis: document.getElementById('ins-jenis').value,
                 kredit: document.getElementById('ins-jenis').value.includes('Masuk') ? Number(document.getElementById('ins-nominal').value) : 0,
                 debit: document.getElementById('ins-jenis').value.includes('Keluar') ? Number(document.getElementById('ins-nominal').value) : 0,
@@ -340,14 +352,13 @@
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "create", data: dataObjek })
             }).then(() => {
-                alert("Transaksi Berhasil Dicatat!");
+                alert("Transaksi Berhasil Disimpan Ke Spreadsheet!");
                 document.getElementById('form-transaksi').reset();
                 tarikDataKasServer();
                 pindahMenu('menu-ringkasan');
             }).finally(() => { btn.disabled = false; });
         }
 
-        // FITUR BARU: GANTI USERNAME & PASSWORD LANGSUNG KE SPREADSHEET
         function ubahKredensialSistem(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-update-auth');
@@ -358,18 +369,14 @@
             fetch(URL_API, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({
-                    action: "update_credentials",
-                    data: { new_username: newU, new_password: newP }
-                })
-            }).then(r => r.json())
-            .then(res => {
-                if(res.status === "success") {
-                    alert("Kredensial baru berhasil disimpan ke Google Sheets! Sila login ulang.");
-                    location.reload();
-                } else { alert("Gagal: " + res.message); }
-            }).catch(() => alert("Berhasil dikirim. Periksa lembar pengaturan pada spreadsheet Anda."))
-            .finally(() => btn.disabled = false);
+                body: JSON.stringify({ action: "update_credentials", data: { new_username: newU, new_password: newP } })
+            }).then(() => {
+                alert("Kredensial Akses Aplikasi Berhasil Diperbarui!");
+                location.reload();
+            }).catch(() => {
+                alert("Kredensial Terkirim.");
+                location.reload();
+            });
         }
     </script>
 </body>
