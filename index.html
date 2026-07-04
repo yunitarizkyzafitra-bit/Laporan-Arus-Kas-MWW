@@ -200,96 +200,89 @@
     </div>
 
    <script>
- <script>
-    // GANTI TAUTAN DI BAWAH INI DENGAN URL WEB APP HASIL DEPLOY APPS SCRIPT TERBARU ANDA
-    const URL_API = "https://script.google.com/macros/s/AKfycbzes0OJAVGo2zHemTxJZoCOmD9uQ-2hkhmL27MbmYSpemKxy-Z22vKsEEGMQSSBjhc/exec"; 
+<script>
+    // MASUKKAN URL WEB APP APPS SCRIPT ANDA DI SINI
+    const URL_API = "https://script.google.com/macros/s/AKfycbxo2V7vI7Z2363ybe9XF0p3rZ2YjMv13GqZ9v90x_F4Bw90L3Xv6WvXoA/exec"; 
 
     let serverMasterSaldoAwal = 16152981; 
     let listTransaksiGlobal = [];
 
-    // FUNGSI TOGGLE MATA SANDI - Dibuat Fleksibel Mendukung Pemanggilan Parameter Langsung maupun Event Browser
+    // ==========================================
+    // 1. FUNGSI TOGGLE MATA SANDI (SUPER AKTIF & ADAPTIF)
+    // ==========================================
     function toggleMataSandi(inputId, iconId) {
-        // Jika dipanggil via objek event bawaan elemen awal aplikasi Anda
-        if (typeof inputId === 'object' && inputId !== null) {
-            if (event) event.preventDefault();
-            const targetInput = document.getElementById('login-password') || document.getElementById('new-password');
-            const targetIcon = document.getElementById('icon-mata-login') || document.getElementById('icon-mata-ubah');
-            if (targetInput && targetIcon) {
-                if (targetInput.type === "password") {
-                    targetInput.type = "text";
-                    targetIcon.className = "fa-solid fa-eye-slash";
+        try {
+            // Menghentikan aksi default browser jika dipanggil via event
+            if (window.event) window.event.preventDefault();
+            if (inputId && typeof inputId === 'object' && inputId.preventDefault) {
+                inputId.preventDefault();
+            }
+
+            // Mencari elemen berdasarkan parameter string atau mendeteksi otomatis elemen input login/ubah sandi Anda
+            let inputElemen = (typeof inputId === 'string') ? document.getElementById(inputId) : null;
+            let iconElemen = (typeof iconId === 'string') ? document.getElementById(iconId) : null;
+
+            if (!inputElemen) {
+                // Deteksi otomatis elemen jika pemanggilan menggunakan 'this' atau 'event' dari HTML asli Anda
+                inputElemen = document.getElementById('login-password') || document.getElementById('new-password');
+                iconElemen = document.getElementById('icon-mata-login') || document.getElementById('icon-mata-ubah');
+            }
+
+            // Eksekusi perubahan tipe input (Toggle Teks / Password)
+            if (inputElemen) {
+                if (inputElemen.type === "password") {
+                    inputElemen.type = "text";
+                    if (iconElemen) {
+                        iconElemen.className = "fa-solid fa-eye-slash text-slate-400 cursor-pointer";
+                    }
                 } else {
-                    targetInput.type = "password";
-                    targetIcon.className = "fa-solid fa-eye";
+                    inputElemen.type = "password";
+                    if (iconElemen) {
+                        iconElemen.className = "fa-solid fa-eye text-slate-400 cursor-pointer";
+                    }
                 }
             }
-            return;
-        }
-
-        // Jika dipanggil menggunakan string ID elemen struktural
-        const input = document.getElementById(inputId);
-        const icon = document.getElementById(iconId);
-        if (input) {
-            if (input.type === "password") {
-                input.type = "text";
-                if(icon) icon.className = "fa-solid fa-eye-slash";
-            } else {
-                input.type = "password";
-                if(icon) icon.className = "fa-solid fa-eye";
-            }
+        } catch (error) {
+            console.log("Sistem mengamankan toggle: ", error);
         }
     }
 
-    // Fungsi konversi format penulisan waktu agar sinkron secara profesional dengan database spreadsheet
-    function parsingKeTanggalValid(teksTanggal) {
-        if (!teksTanggal) return new Date(NaN);
-        let str = teksTanggal.toString().toUpperCase().trim();
-        
-        const petaBulan = {
-            'JAN': 0, 'JANUARI': 0, 'FEB': 1, 'FEBRUARI': 1, 'MAR': 2, 'MARET': 2,
-            'APR': 3, 'APRIL': 3, 'MAY': 4, 'MEI': 4, 'JUN': 5, 'JUNI': 5,
-            'JUL': 6, 'JULI': 6, 'AUG': 7, 'AGUSTUS': 7, 'AGU': 7, 'SEP': 8, 'SEPTEMBER': 8,
-            'OCT': 9, 'OKTOBER': 9, 'OKT': 9, 'NOV': 10, 'NOVEMBER': 10, 'DEC': 11, 'DESEMBER': 11, 'DES': 11
-        };
-        
-        let tglMurni = new Date(str);
-        if (!isNaN(tglMurni.getTime())) return tglMurni;
-        
-        let bagian = str.split(/[\s,:-]+/);
-        if (bagian.length >= 3) {
-            let hari = parseInt(bagian[0], 10);
-            let blnTeks = bagian[1];
-            let tahun = parseInt(bagian[2], 10);
-            let jam = bagian[3] ? parseInt(bagian[3], 10) : 0;
-            let menit = bagian[4] ? parseInt(bagian[4], 10) : 0;
-            
-            if (petaBulan[blnTeks] !== undefined && !isNaN(hari) && !isNaN(tahun)) {
-                return new Date(tahun, petaBulan[blnTeks], hari, jam, menit);
-            }
-        }
-        return new Date(NaN);
-    }
-
+    // ==========================================
+    // 2. FUNGSI NAVIGASI & ROUTING MENU UTAMA
+    // ==========================================
     function pindahMenu(menuId) {
-        document.querySelectorAll('.menu-content').forEach(el => el.classList.add('hidden'));
-        const targetMenu = document.getElementById(menuId);
-        if(targetMenu) targetMenu.classList.remove('hidden');
-        
-        document.querySelectorAll('.nav-link').forEach(btn => btn.className = "nav-link w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white");
-        if(event && event.currentTarget) {
-            event.currentTarget.className = "nav-link w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl bg-teal-600 text-white";
+        try {
+            document.querySelectorAll('.menu-content').forEach(el => el.classList.add('hidden'));
+            const targetMenu = document.getElementById(menuId);
+            if (targetMenu) targetMenu.classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-link').forEach(btn => {
+                btn.className = "nav-link w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white";
+            });
+            
+            let e = window.event;
+            if (e && e.currentTarget) {
+                e.currentTarget.className = "nav-link w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl bg-teal-600 text-white";
+            }
+        } catch (err) {
+            console.error("Navigasi error: ", err);
         }
     }
 
+    // ==========================================
+    // 3. PROSES AUTENTIKASI AKSES MASUK (LOGIN)
+    // ==========================================
     function prosesAksesLogin(e) {
-        if(e && e.preventDefault) e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
+        else if (window.event) window.event.preventDefault();
+
         const u = document.getElementById('login-username').value;
         const p = document.getElementById('login-password').value;
         const btn = document.getElementById('btn-login');
         const err = document.getElementById('error-login');
 
-        if(btn) btn.disabled = true;
-        if(err) err.classList.add('hidden');
+        if (btn) btn.disabled = true;
+        if (err) err.classList.add('hidden');
 
         fetch(`${URL_API}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`)
             .then(r => r.json())
@@ -299,22 +292,48 @@
                     document.getElementById('screen-dashboard').classList.remove('hidden');
                     tarikDataKasServer();
                 } else { 
-                    if(err) err.classList.remove('hidden'); 
+                    if (err) err.classList.remove('hidden'); 
                 }
             })
             .catch(() => { 
-                if(err) err.classList.remove('hidden'); 
+                if (err) err.classList.remove('hidden'); 
             })
             .finally(() => { 
-                if(btn) btn.disabled = false; 
+                if (btn) btn.disabled = false; 
             });
+    }
+
+    // ==========================================
+    // 4. MANAGEMENT DATA & FORMATTING TANGGAL
+    // ==========================================
+    function parsingKeTanggalValid(teksTanggal) {
+        if (!teksTanggal) return new Date(NaN);
+        let str = teksTanggal.toString().toUpperCase().trim();
+        const petaBulan = {
+            'JAN': 0, 'JANUARI': 0, 'FEB': 1, 'FEBRUARI': 1, 'MAR': 2, 'MARET': 2,
+            'APR': 3, 'APRIL': 3, 'MAY': 4, 'MEI': 4, 'JUN': 5, 'JUNI': 5,
+            'JUL': 6, 'JULI': 6, 'AUG': 7, 'AGUSTUS': 7, 'AGU': 7, 'SEP': 8, 'SEPTEMBER': 8,
+            'OCT': 9, 'OKTOBER': 9, 'OKT': 9, 'NOV': 10, 'NOVEMBER': 10, 'DEC': 11, 'DESEMBER': 11, 'DES': 11
+        };
+        let tglMurni = new Date(str);
+        if (!isNaN(tglMurni.getTime())) return tglMurni;
+        let bagian = str.split(/[\s,:-]+/);
+        if (bagian.length >= 3) {
+            let hari = parseInt(bagian[0], 10);
+            let blnTeks = bagian[1];
+            let tahun = parseInt(bagian[2], 10);
+            if (petaBulan[blnTeks] !== undefined && !isNaN(hari) && !isNaN(tahun)) {
+                return new Date(tahun, petaBulan[blnTeks], hari);
+            }
+        }
+        return new Date(NaN);
     }
 
     function tarikDataKasServer() {
         fetch(`${URL_API}?action=read`)
             .then(r => r.json())
             .then(res => {
-                if(res && res.transaksi) {
+                if (res && res.transaksi) {
                     serverMasterSaldoAwal = res.masterSaldoAwal || 16152981;
                     listTransaksiGlobal = res.transaksi;
                 }
@@ -325,72 +344,82 @@
     }
 
     function kalkulasiDanRenderTabelLayar() {
-        const bulanDipilih = parseInt(document.getElementById('filter-periode-bulan').value);
-        const tbody = document.getElementById('tabel-kas-body');
-        if(tbody) tbody.innerHTML = '';
+        try {
+            const filterBulan = document.getElementById('filter-periode-bulan');
+            const bulanDipilih = filterBulan ? parseInt(filterBulan.value) : 0;
+            const tbody = document.getElementById('tabel-kas-body');
+            if (tbody) tbody.innerHTML = '';
 
-        let semuaData = [...listTransaksiGlobal];
-        semuaData.sort((a, b) => Number(a.id.toString().replace(/\D/g, '')) - Number(b.id.toString().replace(/\D/g, '')));
-
-        let dataPerBulan = [];
-        for (let i = 0; i < 12; i++) {
-            dataPerBulan[i] = { saldoAwal: 0, totalKredit: 0, totalDebit: 0, saldoAkhir: 0, transaksi: [] };
-        }
-
-        semuaData.forEach(item => {
-            let tgl = parsingKeTanggalValid(item.tanggal);
-            if (!isNaN(tgl.getTime())) {
-                let blnIndex = tgl.getMonth(); 
-                dataPerBulan[blnIndex].transaksi.push(item);
-                dataPerBulan[blnIndex].totalKredit += Number(item.kredit || 0);
-                dataPerBulan[blnIndex].totalDebit += Number(item.debit || 0);
-            }
-        });
-
-        let saldoEstafet = serverMasterSaldoAwal;
-
-        for (let i = 0; i < 12; i++) {
-            if (i === 4) { 
-                dataPerBulan[i].saldoAwal = 16152981; 
-                dataPerBulan[i].saldoAkhir = 15711218; 
-                saldoEstafet = 15711218; 
-            } else {
-                dataPerBulan[i].saldoAwal = saldoEstafet;
-                dataPerBulan[i].saldoAkhir = (dataPerBulan[i].saldoAwal + dataPerBulan[i].totalKredit) - dataPerBulan[i].totalDebit;
-                saldoEstafet = dataPerBulan[i].saldoAkhir;
-            }
-        }
-
-        let bulanAktif = dataPerBulan[bulanDipilih];
-        
-        if(tbody && bulanAktif.transaksi.length > 0) {
-            bulanAktif.transaksi.forEach(item => {
-                let tr = document.createElement('tr');
-                tr.className = "border-b border-slate-100 hover:bg-slate-50";
-                
-                let tglTampil = parsingKeTanggalValid(item.tanggal);
-                let formatTglStr = !isNaN(tglTampil.getTime()) ? 
-                    tglTampil.toLocaleString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : item.tanggal;
-
-                tr.innerHTML = `
-                    <td class="p-3 text-slate-500">${formatTglStr}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.jenis.includes('Masuk') ? 'bg-teal-100 text-teal-800' : 'bg-rose-100 text-rose-800'}">${item.jenis}</span></td>
-                    <td class="p-3 text-right text-rose-600 font-bold">${item.debit > 0 ? 'Rp '+item.debit.toLocaleString('id-ID') : '-'}</td>
-                    <td class="p-3 text-right text-teal-600 font-bold">${item.kredit > 0 ? 'Rp '+item.kredit.toLocaleString('id-ID') : '-'}</td>
-                    <td class="p-3 text-slate-600 font-medium">${item.uraian}</td>
-                `;
-                tbody.appendChild(tr);
+            let semuaData = [...listTransaksiGlobal];
+            semuaData.sort((a, b) => {
+                let idA = a && a.id ? Number(a.id.toString().replace(/\D/g, '')) : 0;
+                let idB = b && b.id ? Number(b.id.toString().replace(/\D/g, '')) : 0;
+                return idA - idB;
             });
+
+            let dataPerBulan = [];
+            for (let i = 0; i < 12; i++) {
+                dataPerBulan[i] = { saldoAwal: 0, totalKredit: 0, totalDebit: 0, saldoAkhir: 0, transaksi: [] };
+            }
+
+            semuaData.forEach(item => {
+                if (!item) return;
+                let tgl = parsingKeTanggalValid(item.tanggal);
+                if (!isNaN(tgl.getTime())) {
+                    let blnIndex = tgl.getMonth(); 
+                    dataPerBulan[blnIndex].transaksi.push(item);
+                    dataPerBulan[blnIndex].totalKredit += Number(item.kredit || 0);
+                    dataPerBulan[blnIndex].totalDebit += Number(item.debit || 0);
+                }
+            });
+
+            let saldoEstafet = serverMasterSaldoAwal;
+            for (let i = 0; i < 12; i++) {
+                if (i === 4) { 
+                    dataPerBulan[i].saldoAwal = 16152981; 
+                    dataPerBulan[i].saldoAkhir = 15711218; 
+                    saldoEstafet = 15711218; 
+                } else {
+                    dataPerBulan[i].saldoAwal = saldoEstafet;
+                    dataPerBulan[i].saldoAkhir = (dataPerBulan[i].saldoAwal + dataPerBulan[i].totalKredit) - dataPerBulan[i].totalDebit;
+                    saldoEstafet = dataPerBulan[i].saldoAkhir;
+                }
+            }
+
+            let bulanAktif = dataPerBulan[bulanDipilih];
+            if (tbody && bulanAktif.transaksi.length > 0) {
+                bulanAktif.transaksi.forEach(item => {
+                    let tr = document.createElement('tr');
+                    tr.className = "border-b border-slate-100 hover:bg-slate-50";
+                    let tglTampil = parsingKeTanggalValid(item.tanggal);
+                    let formatTglStr = !isNaN(tglTampil.getTime()) ? 
+                        tglTampil.toLocaleString('id-ID', {day:'numeric', month:'short', year:'numeric'}) : item.tanggal;
+
+                    tr.innerHTML = `
+                        <td class="p-3 text-slate-500">${formatTglStr}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.jenis.includes('Masuk') ? 'bg-teal-100 text-teal-800' : 'bg-rose-100 text-rose-800'}">${item.jenis}</span></td>
+                        <td class="p-3 text-right text-rose-600 font-bold">${item.debit > 0 ? 'Rp '+item.debit.toLocaleString('id-ID') : '-'}</td>
+                        <td class="p-3 text-right text-teal-600 font-bold">${item.kredit > 0 ? 'Rp '+item.kredit.toLocaleString('id-ID') : '-'}</td>
+                        <td class="p-3 text-slate-600 font-medium">${item.uraian}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            if(document.getElementById('card-saldo-awal')) document.getElementById('card-saldo-awal').innerText = "Rp " + bulanAktif.saldoAwal.toLocaleString('id-ID');
+            if(document.getElementById('card-pemasukkan')) document.getElementById('card-pemasukkan').innerText = "Rp " + bulanAktif.totalKredit.toLocaleString('id-ID');
+            if(document.getElementById('card-pengeluaran')) document.getElementById('card-pengeluaran').innerText = "Rp " + bulanAktif.totalDebit.toLocaleString('id-ID');
+            if(document.getElementById('card-saldo-akhir')) document.getElementById('card-saldo-akhir').innerText = "Rp " + bulanAktif.saldoAkhir.toLocaleString('id-ID');
+
+            buatGrafikSistemAman(bulanAktif.totalKredit, bulanAktif.totalDebit);
+        } catch (err) {
+            console.error("Error rendering data:", err);
         }
-
-        document.getElementById('card-saldo-awal').innerText = "Rp " + bulanAktif.saldoAwal.toLocaleString('id-ID');
-        document.getElementById('card-pemasukkan').innerText = "Rp " + bulanAktif.totalKredit.toLocaleString('id-ID');
-        document.getElementById('card-pengeluaran').innerText = "Rp " + bulanAktif.totalDebit.toLocaleString('id-ID');
-        document.getElementById('card-saldo-akhir').innerText = "Rp " + bulanAktif.saldoAkhir.toLocaleString('id-ID');
-
-        buatGrafikSistemAman(bulanAktif.totalKredit, bulanAktif.totalDebit);
     }
 
+    // ==========================================
+    // 5. INJEKSI GRAFIK PERSENTASE KEUANGAN
+    // ==========================================
     function buatGrafikSistemAman(kredit, debit) {
         const menuRingkasan = document.getElementById('menu-ringkasan');
         if (!menuRingkasan) return;
@@ -417,9 +446,6 @@
             return;
         }
 
-        let strokeDashDebit = persenDebit;
-        let strokeDashKredit = persenKredit;
-
         wadahGrafik.innerHTML = `
             <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-4 text-center">Persentase Keuangan Kas MWW Sulteng</h3>
             <div class="flex flex-col items-center justify-center gap-6">
@@ -427,7 +453,7 @@
                     <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
                         <circle cx="18" cy="18" r="15.9155" fill="transparent" stroke="#0d9488" stroke-width="3.5"></circle>
                         <circle cx="18" cy="18" r="15.9155" fill="transparent" stroke="#e11d48" stroke-width="3.5" 
-                                stroke-dasharray="${strokeDashDebit} ${strokeDashKredit}" stroke-dashoffset="0"></circle>
+                                stroke-dasharray="${persenDebit} ${persenKredit}" stroke-dashoffset="0"></circle>
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center bg-white m-4 rounded-full shadow-inner">
                         <span class="text-[10px] font-bold text-slate-400 uppercase">Total Arus</span>
@@ -448,20 +474,20 @@
         `;
     }
 
+    // ==========================================
+    // 6. FUNGSI INPUT TRANSAKSI BARU KE SERVER
+    // ==========================================
     function simpanTransaksiKas(e) {
-        if(e && e.preventDefault) e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         const btn = document.getElementById('btn-simpan');
-        if(btn) btn.disabled = true;
+        if (btn) btn.disabled = true;
 
         let tglForm = new Date(document.getElementById('ins-tanggal').value);
         let d = ("0" + tglForm.getDate()).slice(-2);
-        
         let bulanList = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
         let m = bulanList[tglForm.getMonth()];
         let y = tglForm.getFullYear();
-        let hr = ("0" + tglForm.getHours()).slice(-2);
-        let min = ("0" + tglForm.getMinutes()).slice(-2);
-        let formatTeksKas = `${d} ${m} ${y} ${hr}:${min}`;
+        let formatTeksKas = `${d} ${m} ${y}`;
 
         let dataObjek = {
             id: "TX-" + Date.now(),
@@ -477,32 +503,20 @@
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify({ action: "create", data: dataObjek })
         }).then(() => {
-            alert("Transaksi Berhasil Disimpan Ke Spreadsheet!");
+            alert("Transaksi Berhasil Disimpan!");
             document.getElementById('form-transaksi').reset();
             tarikDataKasServer();
             pindahMenu('menu-ringkasan');
         }).finally(() => { 
-            if(btn) btn.disabled = false; 
+            if (btn) btn.disabled = false; 
         });
     }
 
-    function ubahKredensialSistem(e) {
-        if(e && e.preventDefault) e.preventDefault();
-        const btn = document.getElementById('btn-update-auth');
-        const newU = document.getElementById('new-username').value;
-        const newP = document.getElementById('new-password').value;
-
-        if(btn) btn.disabled = true;
-        fetch(URL_API, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "update_credentials", data: { new_username: newU, new_password: newP } })
-        }).then(() => {
-            alert("Kredensial Akses Aplikasi Berhasil Diperbarui!");
-            location.reload();
-        }).catch(() => {
-            alert("Kredensial Terkirim.");
-            location.reload();
-        });
-    }
+    // PENGATURAN ONLOAD OTOMATIS
+    window.addEventListener('DOMContentLoaded', () => {
+        const dashboardScreen = document.getElementById('screen-dashboard');
+        if (dashboardScreen && !dashboardScreen.classList.contains('hidden')) {
+            tarikDataKasServer();
+        }
+    });
 </script>
