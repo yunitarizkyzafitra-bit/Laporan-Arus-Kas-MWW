@@ -200,11 +200,53 @@
     </div>
 
    <script>
+   <script>
     // MASUKKAN URL WEB APP IMPLEMENTASI SCRIPT ANDA DI SINI
-    const URL_API = "https://script.google.com/macros/s/AKfycbxS_oI5d-_ch-1N_uyDuk-y2cVhprGBH8HWvHRtRidpan5jqdo05qzLigwpHHgtTp0T/exec"; 
+    const URL_API = "https://script.google.com/macros/s/AKfycbxQnHMb-V3Q1_DdhXeTJAYvJ4xxadsHyVQG8VLJfs6K58S7DTdAzY0tJliU8IYEPmpu/exec"; 
 
     let serverMasterSaldoAwal = 16152981; 
     let listTransaksiGlobal = [];
+
+    // FUNGSI PARSER UNTUK MEMASTIKAN INTERKONEKSI TANGGAL SPREADSHEET TERBACA SEMPURNA OLEH GITHUB
+    function parsingKeTanggalValid(teksTanggal) {
+        if (!teksTanggal) return new Date(NaN);
+        let str = teksTanggal.toString().toUpperCase().trim();
+        
+        // Pemetaan nama bulan indonesia/singkatan ke indeks angka bulan (0-11)
+        const petaBulan = {
+            'JAN': 0, 'JANUARI': 0,
+            'FEB': 1, 'FEBRUARI': 1,
+            'MAR': 2, 'MARET': 2,
+            'APR': 3, 'APRIL': 3,
+            'MAY': 4, 'MEI': 4,
+            'JUN': 5, 'JUNI': 5,
+            'JUL': 6, 'JULI': 6,
+            'AUG': 7, 'AGUSTUS': 7, 'AGU': 7,
+            'SEP': 8, 'SEPTEMBER': 8,
+            'OCT': 9, 'OKTOBER': 9, 'OKT': 9,
+            'NOV': 10, 'NOVEMBER': 10,
+            'DEC': 11, 'DESEMBER': 11, 'DES': 11
+        };
+        
+        // Coba parsing langsung jika format standar ISO/US
+        let tglMurni = new Date(str);
+        if (!isNaN(tglMurni.getTime())) return tglMurni;
+        
+        // Jika format gabungan teks seperti "03 JUL 2026 14:30" atau "28 MAY 2026 13:15"
+        let bagian = str.split(/[\s,:-]+/);
+        if (bagian.length >= 3) {
+            let hari = parseInt(bagian[0], 10);
+            let blnTeks = bagian[1];
+            let tahun = parseInt(bagian[2], 10);
+            let jam = bagian[3] ? parseInt(bagian[3], 10) : 0;
+            let menit = bagian[4] ? parseInt(bagian[4], 10) : 0;
+            
+            if (petaBulan[blnTeks] !== undefined && !isNaN(hari) && !isNaN(tahun)) {
+                return new Date(tahun, petaBulan[blnTeks], hari, jam, menit);
+            }
+        }
+        return new Date(NaN);
+    }
 
     function toggleMataSandi(inputId, iconId) {
         const input = document.getElementById(inputId);
@@ -262,7 +304,6 @@
             });
     }
 
-    // ENGINE UTAMA: SINKRONISASI OTOMATIS DATA SPREADSHEET DAN SISTEM APLIKASI
     function kalkulasiDanRenderTabelLayar() {
         const bulanDipilih = parseInt(document.getElementById('filter-periode-bulan').value);
         const tbody = document.getElementById('tabel-kas-body');
@@ -270,7 +311,7 @@
 
         let semuaData = [...listTransaksiGlobal];
         
-        // Pengurutan data berdasarkan ID urutan input atau tanggal agar sinkronisasi stabil
+        // Urutkan data berdasarkan ID transaksi secara kronologis agar sinkronisasi stabil
         semuaData.sort((a, b) => Number(a.id.toString().replace(/\D/g, '')) - Number(b.id.toString().replace(/\D/g, '')));
 
         let dataPerBulan = [];
@@ -278,9 +319,9 @@
             dataPerBulan[i] = { saldoAwal: 0, totalKredit: 0, totalDebit: 0, saldoAkhir: 0, transaksi: [] };
         }
 
-        // Parsing interkoneksi data dari spreadsheet
+        // Jalankan interkoneksi pembacaan data menggunakan parser pintar yang baru
         semuaData.forEach(item => {
-            let tgl = new Date(item.tanggal);
+            let tgl = parsingKeTanggalValid(item.tanggal);
             if (!isNaN(tgl.getTime())) {
                 let blnIndex = tgl.getMonth(); 
                 dataPerBulan[blnIndex].transaksi.push(item);
@@ -289,11 +330,11 @@
             }
         });
 
-        // Proses akumulasi saldo tutup buku estafet dari Januari s.d Desember
+        // Logika Saldo Estafet Berjenjang 12 Bulan dengan Kunci Absolut Mei Rp 15.711.218
         let saldoEstafet = serverMasterSaldoAwal;
 
         for (let i = 0; i < 12; i++) {
-            if (i === 4) { // Kunci Absolut Mutlak untuk Bulan Mei
+            if (i === 4) { // Bulan Mei
                 dataPerBulan[i].saldoAwal = 16152981; 
                 dataPerBulan[i].saldoAkhir = 15711218; 
                 saldoEstafet = 15711218; 
@@ -310,8 +351,13 @@
             bulanAktif.transaksi.forEach(item => {
                 let tr = document.createElement('tr');
                 tr.className = "border-b border-slate-100 hover:bg-slate-50";
+                
+                let tglTampil = parsingKeTanggalValid(item.tanggal);
+                let formatTglStr = !isNaN(tglTampil.getTime()) ? 
+                    tglTampil.toLocaleString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : item.tanggal;
+
                 tr.innerHTML = `
-                    <td class="p-3 text-slate-500">${new Date(item.tanggal).toLocaleString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})}</td>
+                    <td class="p-3 text-slate-500">${formatTglStr}</td>
                     <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.jenis.includes('Masuk') ? 'bg-teal-100 text-teal-800' : 'bg-rose-100 text-rose-800'}">${item.jenis}</span></td>
                     <td class="p-3 text-right text-rose-600 font-bold">${item.debit > 0 ? 'Rp '+item.debit.toLocaleString('id-ID') : '-'}</td>
                     <td class="p-3 text-right text-teal-600 font-bold">${item.kredit > 0 ? 'Rp '+item.kredit.toLocaleString('id-ID') : '-'}</td>
@@ -321,17 +367,14 @@
             });
         }
 
-        // Tampilkan data ke komponen teks card yang sudah ada di HTML Anda
         document.getElementById('card-saldo-awal').innerText = "Rp " + bulanAktif.saldoAwal.toLocaleString('id-ID');
         document.getElementById('card-pemasukkan').innerText = "Rp " + bulanAktif.totalKredit.toLocaleString('id-ID');
         document.getElementById('card-pengeluaran').innerText = "Rp " + bulanAktif.totalDebit.toLocaleString('id-ID');
         document.getElementById('card-saldo-akhir').innerText = "Rp " + bulanAktif.saldoAkhir.toLocaleString('id-ID');
 
-        // Panggil fungsi pembuat grafik otomatis (Aman dari Blokir Browser)
         buatGrafikSistemAman(bulanAktif.totalKredit, bulanAktif.totalDebit);
     }
 
-    // FUNGSI GRAFIK SVG ASLI - DIJAMIN MUNCUL TANPA MERUBAH STRUKTUR DOM/HTML
     function buatGrafikSistemAman(kredit, debit) {
         const menuRingkasan = document.getElementById('menu-ringkasan');
         if (!menuRingkasan) return;
@@ -348,7 +391,6 @@
         let persenKredit = total > 0 ? Math.round((kredit / total) * 100) : 100;
         let persenDebit = total > 0 ? Math.round((debit / total) * 100) : 0;
 
-        // Jika tidak ada transaksi sama sekali di bulan tersebut
         if (kredit === 0 && debit === 0) {
             wadahGrafik.innerHTML = `
                 <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-4 text-center">Persentase Keuangan Kas MWW Sulteng</h3>
@@ -359,7 +401,6 @@
             return;
         }
 
-        // Hitung keliling stroke lingkaran SVG (2 * PI * Radius 15.915 = 100)
         let strokeDashDebit = persenDebit;
         let strokeDashKredit = persenKredit;
 
@@ -368,9 +409,7 @@
             <div class="flex flex-col items-center justify-center gap-6">
                 <div class="relative w-40 h-40">
                     <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
-                        <!-- Lingkaran Dasar Penerimaan (Teal) -->
                         <circle cx="18" cy="18" r="15.9155" fill="transparent" stroke="#0d9488" stroke-width="3.5"></circle>
-                        <!-- Lingkaran Potongan Pengeluaran (Rose) -->
                         <circle cx="18" cy="18" r="15.9155" fill="transparent" stroke="#e11d48" stroke-width="3.5" 
                                 stroke-dasharray="${strokeDashDebit} ${strokeDashKredit}" stroke-dashoffset="0"></circle>
                     </svg>
@@ -400,6 +439,8 @@
 
         let tglForm = new Date(document.getElementById('ins-tanggal').value);
         let d = ("0" + tglForm.getDate()).slice(-2);
+        
+        // Ganti nama bulan menggunakan singkatan standar internasional agar aman dibaca sistem
         let bulanList = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
         let m = bulanList[tglForm.getMonth()];
         let y = tglForm.getFullYear();
@@ -448,5 +489,3 @@
         });
     }
 </script>
-</body>
-</html>
