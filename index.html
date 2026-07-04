@@ -200,19 +200,31 @@
     </div>
 
    <script>
-   <script>
+  <script>
     // MASUKKAN URL WEB APP IMPLEMENTASI SCRIPT ANDA DI SINI
-    const URL_API = "https://script.google.com/macros/s/AKfycbxQnHMb-V3Q1_DdhXeTJAYvJ4xxadsHyVQG8VLJfs6K58S7DTdAzY0tJliU8IYEPmpu/exec"; 
+    const URL_API = "https://script.google.com/macros/s/AKfycbwD4dCo_GIokIspoIUG2EvE0Nz08AgFood51PzUf3nCSkT8VEXNBfLAzK2n8zv0aBHq/exec"; 
 
     let serverMasterSaldoAwal = 16152981; 
     let listTransaksiGlobal = [];
+
+    // FUNGSI TOGGLE LIHAT/SEMBUNYIKAN PASSWORD (DIJAMIN AKTIF KEMBALI)
+    function toggleMataSandi(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (input && input.type === "password") {
+            input.type = "text";
+            if(icon) icon.className = "fa-solid fa-eye-slash";
+        } else if (input) {
+            input.type = "password";
+            if(icon) icon.className = "fa-solid fa-eye";
+        }
+    }
 
     // FUNGSI PARSER UNTUK MEMASTIKAN INTERKONEKSI TANGGAL SPREADSHEET TERBACA SEMPURNA OLEH GITHUB
     function parsingKeTanggalValid(teksTanggal) {
         if (!teksTanggal) return new Date(NaN);
         let str = teksTanggal.toString().toUpperCase().trim();
         
-        // Pemetaan nama bulan indonesia/singkatan ke indeks angka bulan (0-11)
         const petaBulan = {
             'JAN': 0, 'JANUARI': 0,
             'FEB': 1, 'FEBRUARI': 1,
@@ -228,11 +240,9 @@
             'DEC': 11, 'DESEMBER': 11, 'DES': 11
         };
         
-        // Coba parsing langsung jika format standar ISO/US
         let tglMurni = new Date(str);
         if (!isNaN(tglMurni.getTime())) return tglMurni;
         
-        // Jika format gabungan teks seperti "03 JUL 2026 14:30" atau "28 MAY 2026 13:15"
         let bagian = str.split(/[\s,:-]+/);
         if (bagian.length >= 3) {
             let hari = parseInt(bagian[0], 10);
@@ -246,18 +256,6 @@
             }
         }
         return new Date(NaN);
-    }
-
-    function toggleMataSandi(inputId, iconId) {
-        const input = document.getElementById(inputId);
-        const icon = document.getElementById(iconId);
-        if (input.type === "password") {
-            input.type = "text";
-            icon.className = "fa-solid fa-eye-slash";
-        } else {
-            input.type = "password";
-            icon.className = "fa-solid fa-eye";
-        }
     }
 
     function pindahMenu(menuId) {
@@ -276,7 +274,7 @@
         const btn = document.getElementById('btn-login');
         const err = document.getElementById('error-login');
 
-        btn.disabled = true;
+        if(btn) btn.disabled = true;
         fetch(`${URL_API}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`)
             .then(r => r.json())
             .then(res => {
@@ -284,10 +282,10 @@
                     document.getElementById('screen-login').classList.add('hidden');
                     document.getElementById('screen-dashboard').classList.remove('hidden');
                     tarikDataKasServer();
-                } else { err.classList.remove('hidden'); }
+                } else { if(err) err.classList.remove('hidden'); }
             })
-            .catch(() => { err.classList.remove('hidden'); })
-            .finally(() => { btn.disabled = false; });
+            .catch(() => { if(err) err.classList.remove('hidden'); })
+            .finally(() => { if(btn) btn.disabled = false; });
     }
 
     function tarikDataKasServer() {
@@ -310,8 +308,6 @@
         if(tbody) tbody.innerHTML = '';
 
         let semuaData = [...listTransaksiGlobal];
-        
-        // Urutkan data berdasarkan ID transaksi secara kronologis agar sinkronisasi stabil
         semuaData.sort((a, b) => Number(a.id.toString().replace(/\D/g, '')) - Number(b.id.toString().replace(/\D/g, '')));
 
         let dataPerBulan = [];
@@ -319,7 +315,6 @@
             dataPerBulan[i] = { saldoAwal: 0, totalKredit: 0, totalDebit: 0, saldoAkhir: 0, transaksi: [] };
         }
 
-        // Jalankan interkoneksi pembacaan data menggunakan parser pintar yang baru
         semuaData.forEach(item => {
             let tgl = parsingKeTanggalValid(item.tanggal);
             if (!isNaN(tgl.getTime())) {
@@ -330,11 +325,10 @@
             }
         });
 
-        // Logika Saldo Estafet Berjenjang 12 Bulan dengan Kunci Absolut Mei Rp 15.711.218
         let saldoEstafet = serverMasterSaldoAwal;
 
         for (let i = 0; i < 12; i++) {
-            if (i === 4) { // Bulan Mei
+            if (i === 4) { 
                 dataPerBulan[i].saldoAwal = 16152981; 
                 dataPerBulan[i].saldoAkhir = 15711218; 
                 saldoEstafet = 15711218; 
@@ -435,12 +429,11 @@
     function simpanTransaksiKas(e) {
         e.preventDefault();
         const btn = document.getElementById('btn-simpan');
-        btn.disabled = true;
+        if(btn) btn.disabled = true;
 
         let tglForm = new Date(document.getElementById('ins-tanggal').value);
         let d = ("0" + tglForm.getDate()).slice(-2);
         
-        // Ganti nama bulan menggunakan singkatan standar internasional agar aman dibaca sistem
         let bulanList = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
         let m = bulanList[tglForm.getMonth()];
         let y = tglForm.getFullYear();
@@ -466,7 +459,7 @@
             document.getElementById('form-transaksi').reset();
             tarikDataKasServer();
             pindahMenu('menu-ringkasan');
-        }).finally(() => { btn.disabled = false; });
+        }).finally(() => { if(btn) btn.disabled = false; });
     }
 
     function ubahKredensialSistem(e) {
@@ -475,7 +468,7 @@
         const newU = document.getElementById('new-username').value;
         const newP = document.getElementById('new-password').value;
 
-        btn.disabled = true;
+        if(btn) btn.disabled = true;
         fetch(URL_API, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
