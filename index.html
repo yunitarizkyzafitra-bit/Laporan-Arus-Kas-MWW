@@ -200,44 +200,56 @@
     </div>
 
    <script>
-  <script>
-    // MASUKKAN URL WEB APP IMPLEMENTASI SCRIPT ANDA DI SINI
-    const URL_API = "https://script.google.com/macros/s/AKfycbwD4dCo_GIokIspoIUG2EvE0Nz08AgFood51PzUf3nCSkT8VEXNBfLAzK2n8zv0aBHq/exec"; 
+ <script>
+    // GANTI TAUTAN DI BAWAH INI DENGAN URL WEB APP HASIL DEPLOY APPS SCRIPT TERBARU ANDA
+    const URL_API = "https://script.google.com/macros/s/AKfycbzes0OJAVGo2zHemTxJZoCOmD9uQ-2hkhmL27MbmYSpemKxy-Z22vKsEEGMQSSBjhc/exec"; 
 
     let serverMasterSaldoAwal = 16152981; 
     let listTransaksiGlobal = [];
 
-    // FUNGSI TOGGLE LIHAT/SEMBUNYIKAN PASSWORD (DIJAMIN AKTIF KEMBALI)
+    // FUNGSI TOGGLE MATA SANDI - Dibuat Fleksibel Mendukung Pemanggilan Parameter Langsung maupun Event Browser
     function toggleMataSandi(inputId, iconId) {
+        // Jika dipanggil via objek event bawaan elemen awal aplikasi Anda
+        if (typeof inputId === 'object' && inputId !== null) {
+            if (event) event.preventDefault();
+            const targetInput = document.getElementById('login-password') || document.getElementById('new-password');
+            const targetIcon = document.getElementById('icon-mata-login') || document.getElementById('icon-mata-ubah');
+            if (targetInput && targetIcon) {
+                if (targetInput.type === "password") {
+                    targetInput.type = "text";
+                    targetIcon.className = "fa-solid fa-eye-slash";
+                } else {
+                    targetInput.type = "password";
+                    targetIcon.className = "fa-solid fa-eye";
+                }
+            }
+            return;
+        }
+
+        // Jika dipanggil menggunakan string ID elemen struktural
         const input = document.getElementById(inputId);
         const icon = document.getElementById(iconId);
-        if (input && input.type === "password") {
-            input.type = "text";
-            if(icon) icon.className = "fa-solid fa-eye-slash";
-        } else if (input) {
-            input.type = "password";
-            if(icon) icon.className = "fa-solid fa-eye";
+        if (input) {
+            if (input.type === "password") {
+                input.type = "text";
+                if(icon) icon.className = "fa-solid fa-eye-slash";
+            } else {
+                input.type = "password";
+                if(icon) icon.className = "fa-solid fa-eye";
+            }
         }
     }
 
-    // FUNGSI PARSER UNTUK MEMASTIKAN INTERKONEKSI TANGGAL SPREADSHEET TERBACA SEMPURNA OLEH GITHUB
+    // Fungsi konversi format penulisan waktu agar sinkron secara profesional dengan database spreadsheet
     function parsingKeTanggalValid(teksTanggal) {
         if (!teksTanggal) return new Date(NaN);
         let str = teksTanggal.toString().toUpperCase().trim();
         
         const petaBulan = {
-            'JAN': 0, 'JANUARI': 0,
-            'FEB': 1, 'FEBRUARI': 1,
-            'MAR': 2, 'MARET': 2,
-            'APR': 3, 'APRIL': 3,
-            'MAY': 4, 'MEI': 4,
-            'JUN': 5, 'JUNI': 5,
-            'JUL': 6, 'JULI': 6,
-            'AUG': 7, 'AGUSTUS': 7, 'AGU': 7,
-            'SEP': 8, 'SEPTEMBER': 8,
-            'OCT': 9, 'OKTOBER': 9, 'OKT': 9,
-            'NOV': 10, 'NOVEMBER': 10,
-            'DEC': 11, 'DESEMBER': 11, 'DES': 11
+            'JAN': 0, 'JANUARI': 0, 'FEB': 1, 'FEBRUARI': 1, 'MAR': 2, 'MARET': 2,
+            'APR': 3, 'APRIL': 3, 'MAY': 4, 'MEI': 4, 'JUN': 5, 'JUNI': 5,
+            'JUL': 6, 'JULI': 6, 'AUG': 7, 'AGUSTUS': 7, 'AGU': 7, 'SEP': 8, 'SEPTEMBER': 8,
+            'OCT': 9, 'OKTOBER': 9, 'OKT': 9, 'NOV': 10, 'NOVEMBER': 10, 'DEC': 11, 'DESEMBER': 11, 'DES': 11
         };
         
         let tglMurni = new Date(str);
@@ -260,7 +272,9 @@
 
     function pindahMenu(menuId) {
         document.querySelectorAll('.menu-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById(menuId).classList.remove('hidden');
+        const targetMenu = document.getElementById(menuId);
+        if(targetMenu) targetMenu.classList.remove('hidden');
+        
         document.querySelectorAll('.nav-link').forEach(btn => btn.className = "nav-link w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white");
         if(event && event.currentTarget) {
             event.currentTarget.className = "nav-link w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl bg-teal-600 text-white";
@@ -268,24 +282,32 @@
     }
 
     function prosesAksesLogin(e) {
-        e.preventDefault();
+        if(e && e.preventDefault) e.preventDefault();
         const u = document.getElementById('login-username').value;
         const p = document.getElementById('login-password').value;
         const btn = document.getElementById('btn-login');
         const err = document.getElementById('error-login');
 
         if(btn) btn.disabled = true;
+        if(err) err.classList.add('hidden');
+
         fetch(`${URL_API}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`)
             .then(r => r.json())
             .then(res => {
-                if (res.login) {
+                if (res && res.login === true) {
                     document.getElementById('screen-login').classList.add('hidden');
                     document.getElementById('screen-dashboard').classList.remove('hidden');
                     tarikDataKasServer();
-                } else { if(err) err.classList.remove('hidden'); }
+                } else { 
+                    if(err) err.classList.remove('hidden'); 
+                }
             })
-            .catch(() => { if(err) err.classList.remove('hidden'); })
-            .finally(() => { if(btn) btn.disabled = false; });
+            .catch(() => { 
+                if(err) err.classList.remove('hidden'); 
+            })
+            .finally(() => { 
+                if(btn) btn.disabled = false; 
+            });
     }
 
     function tarikDataKasServer() {
@@ -427,7 +449,7 @@
     }
 
     function simpanTransaksiKas(e) {
-        e.preventDefault();
+        if(e && e.preventDefault) e.preventDefault();
         const btn = document.getElementById('btn-simpan');
         if(btn) btn.disabled = true;
 
@@ -459,11 +481,13 @@
             document.getElementById('form-transaksi').reset();
             tarikDataKasServer();
             pindahMenu('menu-ringkasan');
-        }).finally(() => { if(btn) btn.disabled = false; });
+        }).finally(() => { 
+            if(btn) btn.disabled = false; 
+        });
     }
 
     function ubahKredensialSistem(e) {
-        e.preventDefault();
+        if(e && e.preventDefault) e.preventDefault();
         const btn = document.getElementById('btn-update-auth');
         const newU = document.getElementById('new-username').value;
         const newP = document.getElementById('new-password').value;
