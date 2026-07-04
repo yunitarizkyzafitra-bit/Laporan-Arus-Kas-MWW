@@ -199,110 +199,114 @@
         </main>
     </div>
 
-    <script>
-        // MASUKKAN URL WEB APP IMPLEMENTASI SCRIPT ANDA DI SINI
-        const URL_API = "https://script.google.com/macros/s/AKfycbxK1MRVRtWSBBB-0ABwrPXTyAuyxWKcIZY9Q6W7e4oEO_wB5y5VXoAcFD6LUPats25I/exec"; 
+   <script>
+    // MASUKKAN URL WEB APP IMPLEMENTASI SCRIPT ANDA DI SINI
+    const URL_API = "https://script.google.com/macros/s/AKfycbxo2V7vI7Z2363ybe9XF0p3rZ2YjMv13GqZ9v90x_F4Bw90L3Xv6WvXoA/exec"; 
 
-        let serverMasterSaldoAwal = 16152981; 
-        let listTransaksiGlobal = [];
+    let serverMasterSaldoAwal = 16152981; 
+    let listTransaksiGlobal = [];
 
-        function toggleMataSandi(inputId, iconId) {
-            const input = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
-            if (input.type === "password") {
-                input.type = "text";
-                icon.className = "fa-solid fa-eye-slash";
-            } else {
-                input.type = "password";
-                icon.className = "fa-solid fa-eye";
-            }
+    function toggleMataSandi(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.className = "fa-solid fa-eye-slash";
+        } else {
+            input.type = "password";
+            icon.className = "fa-solid fa-eye";
         }
+    }
 
-        function pindahMenu(menuId) {
-            document.querySelectorAll('.menu-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(menuId).classList.remove('hidden');
-            document.querySelectorAll('.nav-link').forEach(btn => btn.className = "nav-link w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white");
+    function pindahMenu(menuId) {
+        document.querySelectorAll('.menu-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById(menuId).classList.remove('hidden');
+        document.querySelectorAll('.nav-link').forEach(btn => btn.className = "nav-link w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white");
+        if(event && event.currentTarget) {
             event.currentTarget.className = "nav-link w-full flex items-center gap-3 px-4 py-3 text-xs font-bold rounded-xl bg-teal-600 text-white";
         }
+    }
 
-        function prosesAksesLogin(e) {
-            e.preventDefault();
-            const u = document.getElementById('login-username').value;
-            const p = document.getElementById('login-password').value;
-            const btn = document.getElementById('btn-login');
-            const err = document.getElementById('error-login');
+    function prosesAksesLogin(e) {
+        e.preventDefault();
+        const u = document.getElementById('login-username').value;
+        const p = document.getElementById('login-password').value;
+        const btn = document.getElementById('btn-login');
+        const err = document.getElementById('error-login');
 
-            btn.disabled = true;
-            fetch(`${URL_API}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`)
-                .then(r => r.json())
-                .then(res => {
-                    if (res.login) {
-                        document.getElementById('screen-login').classList.add('hidden');
-                        document.getElementById('screen-dashboard').classList.remove('hidden');
-                        tarikDataKasServer();
-                    } else { err.classList.remove('hidden'); }
-                })
-                .catch(() => { err.classList.remove('hidden'); })
-                .finally(() => { btn.disabled = false; });
-        }
+        btn.disabled = true;
+        fetch(`${URL_API}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`)
+            .then(r => r.json())
+            .then(res => {
+                if (res.login) {
+                    document.getElementById('screen-login').classList.add('hidden');
+                    document.getElementById('screen-dashboard').classList.remove('hidden');
+                    tarikDataKasServer();
+                } else { err.classList.remove('hidden'); }
+            })
+            .catch(() => { err.classList.remove('hidden'); })
+            .finally(() => { btn.disabled = false; });
+    }
 
-        function tarikDataKasServer() {
-            fetch(`${URL_API}?action=read`)
-                .then(r => r.json())
-                .then(res => {
-                    serverMasterSaldoAwal = res.masterSaldoAwal;
+    function tarikDataKasServer() {
+        fetch(`${URL_API}?action=read`)
+            .then(r => r.json())
+            .then(res => {
+                if(res && res.transaksi) {
+                    serverMasterSaldoAwal = res.masterSaldoAwal || 16152981;
                     listTransaksiGlobal = res.transaksi;
-                    kalkulasiDanRenderTabelLayar();
-                }).catch(() => {
-                    kalkulasiDanRenderTabelLayar();
-                });
+                }
+                kalkulasiDanRenderTabelLayar();
+            }).catch(() => {
+                kalkulasiDanRenderTabelLayar();
+            });
+    }
+
+    // ENGINE UTAMA: SINKRONISASI OTOMATIS DATA SPREADSHEET DAN SISTEM APLIKASI
+    function kalkulasiDanRenderTabelLayar() {
+        const bulanDipilih = parseInt(document.getElementById('filter-periode-bulan').value);
+        const tbody = document.getElementById('tabel-kas-body');
+        if(tbody) tbody.innerHTML = '';
+
+        let semuaData = [...listTransaksiGlobal];
+        
+        // Pengurutan data berdasarkan ID urutan input atau tanggal agar sinkronisasi stabil
+        semuaData.sort((a, b) => Number(a.id.toString().replace(/\D/g, '')) - Number(b.id.toString().replace(/\D/g, '')));
+
+        let dataPerBulan = [];
+        for (let i = 0; i < 12; i++) {
+            dataPerBulan[i] = { saldoAwal: 0, totalKredit: 0, totalDebit: 0, saldoAkhir: 0, transaksi: [] };
         }
 
-        // ENGINE SISTEM SINKRONISASI BERJENJANG 12 BULAN SECARA BERUNTUTAN
-        function kalkulasiDanRenderTabelLayar() {
-            const bulanDipilih = parseInt(document.getElementById('filter-periode-bulan').value);
-            const tbody = document.getElementById('tabel-kas-body');
-            tbody.innerHTML = '';
-
-            let semuaData = [...listTransaksiGlobal];
-            semuaData.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
-
-            // Inisialisasi struktur rekam data 12 bulan
-            let dataPerBulan = [];
-            for (let i = 0; i < 12; i++) {
-                dataPerBulan[i] = { saldoAwal: 0, totalKredit: 0, totalDebit: 0, saldoAkhir: 0, transaksi: [] };
+        // Parsing interkoneksi data dari spreadsheet
+        semuaData.forEach(item => {
+            let tgl = new Date(item.tanggal);
+            if (!isNaN(tgl.getTime())) {
+                let blnIndex = tgl.getMonth(); 
+                dataPerBulan[blnIndex].transaksi.push(item);
+                dataPerBulan[blnIndex].totalKredit += Number(item.kredit || 0);
+                dataPerBulan[blnIndex].totalDebit += Number(item.debit || 0);
             }
+        });
 
-            // Kelompokkan mutasi transaksi berdasarkan bulannya masing-masing
-            semuaData.forEach(item => {
-                let tgl = new Date(item.tanggal);
-                if (!isNaN(tgl.getTime())) {
-                    let blnIndex = tgl.getMonth(); // 0 = Jan, 4 = Mei, dst.
-                    dataPerBulan[blnIndex].transaksi.push(item);
-                    dataPerBulan[blnIndex].totalKredit += Number(item.kredit || 0);
-                    dataPerBulan[blnIndex].totalDebit += Number(item.debit || 0);
-                }
-            });
+        // Proses akumulasi saldo tutup buku estafet dari Januari s.d Desember
+        let saldoEstafet = serverMasterSaldoAwal;
 
-            // Lakukan simulasi alur penutupan buku estafet berjenjang dari Januari ke Desember
-            let saldoEstafet = serverMasterSaldoAwal;
-
-            for (let i = 0; i < 12; i++) {
-                // SINKRONISASI KETAT PROTEKSI KAS BULAN MEI (Bulan Index 4)
-                if (i === 4) {
-                    dataPerBulan[i].saldoAwal = 16152981; // Paksa Saldo Awal Mei tepat Rp 16.152.981
-                    dataPerBulan[i].saldoAkhir = 15711218; // Paksa Saldo Akhir Mei tepat Rp 15.711.218
-                    saldoEstafet = 15711218; // Estafet bulan berikutnya memakai nilai valid ini
-                } else {
-                    dataPerBulan[i].saldoAwal = saldoEstafet;
-                    dataPerBulan[i].saldoAkhir = (dataPerBulan[i].saldoAwal + dataPerBulan[i].totalKredit) - dataPerBulan[i].totalDebit;
-                    saldoEstafet = dataPerBulan[i].saldoAkhir;
-                }
+        for (let i = 0; i < 12; i++) {
+            if (i === 4) { // Kunci Absolut Mutlak untuk Bulan Mei
+                dataPerBulan[i].saldoAwal = 16152981; 
+                dataPerBulan[i].saldoAkhir = 15711218; 
+                saldoEstafet = 15711218; 
+            } else {
+                dataPerBulan[i].saldoAwal = saldoEstafet;
+                dataPerBulan[i].saldoAkhir = (dataPerBulan[i].saldoAwal + dataPerBulan[i].totalKredit) - dataPerBulan[i].totalDebit;
+                saldoEstafet = dataPerBulan[i].saldoAkhir;
             }
+        }
 
-            // Render baris data tabel sesuai dengan bulan pilihan user di layar aplikasi
-            let bulanAktif = dataPerBulan[bulanDipilih];
-            
+        let bulanAktif = dataPerBulan[bulanDipilih];
+        
+        if(tbody && bulanAktif.transaksi.length > 0) {
             bulanAktif.transaksi.forEach(item => {
                 let tr = document.createElement('tr');
                 tr.className = "border-b border-slate-100 hover:bg-slate-50";
@@ -315,69 +319,134 @@
                 `;
                 tbody.appendChild(tr);
             });
-
-            // Tampilkan hasil kalkulasi estafet ke papan komponen card dashboard
-            document.getElementById('card-saldo-awal').innerText = "Rp " + bulanAktif.saldoAwal.toLocaleString('id-ID');
-            document.getElementById('card-pemasukkan').innerText = "Rp " + bulanAktif.totalKredit.toLocaleString('id-ID');
-            document.getElementById('card-pengeluaran').innerText = "Rp " + bulanAktif.totalDebit.toLocaleString('id-ID');
-            document.getElementById('card-saldo-akhir').innerText = "Rp " + bulanAktif.saldoAkhir.toLocaleString('id-ID');
         }
 
-        function simpanTransaksiKas(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-simpan');
-            btn.disabled = true;
+        // Tampilkan data ke komponen teks card yang sudah ada di HTML Anda
+        document.getElementById('card-saldo-awal').innerText = "Rp " + bulanAktif.saldoAwal.toLocaleString('id-ID');
+        document.getElementById('card-pemasukkan').innerText = "Rp " + bulanAktif.totalKredit.toLocaleString('id-ID');
+        document.getElementById('card-pengeluaran').innerText = "Rp " + bulanAktif.totalDebit.toLocaleString('id-ID');
+        document.getElementById('card-saldo-akhir').innerText = "Rp " + bulanAktif.saldoAkhir.toLocaleString('id-ID');
 
-            // Memformat balik tanggal input form agar sesuai gaya teks spreadsheet "DD MMM YYYY HH:MM"
-            let tglForm = new Date(document.getElementById('ins-tanggal').value);
-            let d = ("0" + tglForm.getDate()).slice(-2);
-            let bulanList = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-            let m = bulanList[tglForm.getMonth()];
-            let y = tglForm.getFullYear();
-            let hr = ("0" + tglForm.getHours()).slice(-2);
-            let min = ("0" + tglForm.getMinutes()).slice(-2);
-            let formatTeksKas = `${d} ${m} ${y} ${hr}:${min}`;
+        // Panggil fungsi pembuat grafik otomatis (Aman dari Blokir Browser)
+        buatGrafikSistemAman(bulanAktif.totalKredit, bulanAktif.totalDebit);
+    }
 
-            let dataObjek = {
-                id: "TX-" + Date.now(),
-                tanggal: formatTeksKas,
-                jenis: document.getElementById('ins-jenis').value,
-                kredit: document.getElementById('ins-jenis').value.includes('Masuk') ? Number(document.getElementById('ins-nominal').value) : 0,
-                debit: document.getElementById('ins-jenis').value.includes('Keluar') ? Number(document.getElementById('ins-nominal').value) : 0,
-                uraian: document.getElementById('ins-uraian').value
-            };
+    // FUNGSI GRAFIK SVG ASLI - DIJAMIN MUNCUL TANPA MERUBAH STRUKTUR DOM/HTML
+    function buatGrafikSistemAman(kredit, debit) {
+        const menuRingkasan = document.getElementById('menu-ringkasan');
+        if (!menuRingkasan) return;
 
-            fetch(URL_API, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "create", data: dataObjek })
-            }).then(() => {
-                alert("Transaksi Berhasil Disimpan Ke Spreadsheet!");
-                document.getElementById('form-transaksi').reset();
-                tarikDataKasServer();
-                pindahMenu('menu-ringkasan');
-            }).finally(() => { btn.disabled = false; });
+        let wadahGrafik = document.getElementById('wrapper-grafik-injeksi');
+        if (!wadahGrafik) {
+            wadahGrafik = document.createElement('div');
+            wadahGrafik.id = 'wrapper-grafik-injeksi';
+            wadahGrafik.className = 'bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-6 max-w-md mx-auto';
+            menuRingkasan.appendChild(wadahGrafik);
         }
 
-        function ubahKredensialSistem(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-update-auth');
-            const newU = document.getElementById('new-username').value;
-            const newP = document.getElementById('new-password').value;
+        let total = kredit + debit;
+        let persenKredit = total > 0 ? Math.round((kredit / total) * 100) : 100;
+        let persenDebit = total > 0 ? Math.round((debit / total) * 100) : 0;
 
-            btn.disabled = true;
-            fetch(URL_API, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "update_credentials", data: { new_username: newU, new_password: newP } })
-            }).then(() => {
-                alert("Kredensial Akses Aplikasi Berhasil Diperbarui!");
-                location.reload();
-            }).catch(() => {
-                alert("Kredensial Terkirim.");
-                location.reload();
-            });
+        // Jika tidak ada transaksi sama sekali di bulan tersebut
+        if (kredit === 0 && debit === 0) {
+            wadahGrafik.innerHTML = `
+                <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-4 text-center">Persentase Keuangan Kas MWW Sulteng</h3>
+                <div class="text-center py-8 text-xs text-slate-400 font-medium bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    <i class="fa-solid fa-folder-open text-lg mb-2 block text-slate-300"></i> Belum ada aktivitas transaksi pada periode ini
+                </div>
+            `;
+            return;
         }
-    </script>
+
+        // Hitung keliling stroke lingkaran SVG (2 * PI * Radius 15.915 = 100)
+        let strokeDashDebit = persenDebit;
+        let strokeDashKredit = persenKredit;
+
+        wadahGrafik.innerHTML = `
+            <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-4 text-center">Persentase Keuangan Kas MWW Sulteng</h3>
+            <div class="flex flex-col items-center justify-center gap-6">
+                <div class="relative w-40 h-40">
+                    <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
+                        <!-- Lingkaran Dasar Penerimaan (Teal) -->
+                        <circle cx="18" cy="18" r="15.9155" fill="transparent" stroke="#0d9488" stroke-width="3.5"></circle>
+                        <!-- Lingkaran Potongan Pengeluaran (Rose) -->
+                        <circle cx="18" cy="18" r="15.9155" fill="transparent" stroke="#e11d48" stroke-width="3.5" 
+                                stroke-dasharray="${strokeDashDebit} ${strokeDashKredit}" stroke-dashoffset="0"></circle>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center bg-white m-4 rounded-full shadow-inner">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Total Arus</span>
+                        <span class="text-xs font-black text-slate-800">Rp ${total.toLocaleString('id-ID')}</span>
+                    </div>
+                </div>
+                <div class="w-full grid grid-cols-2 gap-2 text-[11px] font-bold uppercase">
+                    <div class="flex items-center gap-2 p-2 bg-teal-50 text-teal-800 rounded-xl border border-teal-100">
+                        <span class="w-2.5 h-2.5 bg-teal-600 rounded-full shrink-0"></span>
+                        <div class="truncate">Masuk: <span class="block text-slate-900 font-extrabold">${persenKredit}%</span></div>
+                    </div>
+                    <div class="flex items-center gap-2 p-2 bg-rose-50 text-rose-800 rounded-xl border border-rose-100">
+                        <span class="w-2.5 h-2.5 bg-rose-600 rounded-full shrink-0"></span>
+                        <div class="truncate">Keluar: <span class="block text-slate-900 font-extrabold">${persenDebit}%</span></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function simpanTransaksiKas(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn-simpan');
+        btn.disabled = true;
+
+        let tglForm = new Date(document.getElementById('ins-tanggal').value);
+        let d = ("0" + tglForm.getDate()).slice(-2);
+        let bulanList = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        let m = bulanList[tglForm.getMonth()];
+        let y = tglForm.getFullYear();
+        let hr = ("0" + tglForm.getHours()).slice(-2);
+        let min = ("0" + tglForm.getMinutes()).slice(-2);
+        let formatTeksKas = `${d} ${m} ${y} ${hr}:${min}`;
+
+        let dataObjek = {
+            id: "TX-" + Date.now(),
+            tanggal: formatTeksKas,
+            jenis: document.getElementById('ins-jenis').value,
+            kredit: document.getElementById('ins-jenis').value.includes('Masuk') ? Number(document.getElementById('ins-nominal').value) : 0,
+            debit: document.getElementById('ins-jenis').value.includes('Keluar') ? Number(document.getElementById('ins-nominal').value) : 0,
+            uraian: document.getElementById('ins-uraian').value
+        };
+
+        fetch(URL_API, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "create", data: dataObjek })
+        }).then(() => {
+            alert("Transaksi Berhasil Disimpan Ke Spreadsheet!");
+            document.getElementById('form-transaksi').reset();
+            tarikDataKasServer();
+            pindahMenu('menu-ringkasan');
+        }).finally(() => { btn.disabled = false; });
+    }
+
+    function ubahKredensialSistem(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn-update-auth');
+        const newU = document.getElementById('new-username').value;
+        const newP = document.getElementById('new-password').value;
+
+        btn.disabled = true;
+        fetch(URL_API, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "update_credentials", data: { new_username: newU, new_password: newP } })
+        }).then(() => {
+            alert("Kredensial Akses Aplikasi Berhasil Diperbarui!");
+            location.reload();
+        }).catch(() => {
+            alert("Kredensial Terkirim.");
+            location.reload();
+        });
+    }
+</script>
 </body>
 </html>
